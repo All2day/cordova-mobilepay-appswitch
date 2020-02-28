@@ -2,7 +2,7 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-mobilepay-appswitch"
-    version="1.0.0">
+    version="1.0.3">
     <name>Cordova MobilePay AppSwitch Plugin</name>
     <description>Cordova plugin for the Danske Bank Mobilepay AppSwitcher, to enable cordova-based apps to use the app switcher SDK.</description>
     <license>MIT</license>
