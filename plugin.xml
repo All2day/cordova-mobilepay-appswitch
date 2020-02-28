@@ -33,7 +33,7 @@
 
 
         <source-file src="src/android/com/eqt1/cordovaMobilePayAppSwitch/CordovaMobilePayAppSwitch.java" target-dir="src/com/eqt1/cordovaMobilePayAppSwitch/" />
-        <source-file src="src/android/mobilepay-appswitch-1.8.0.jar" target-dir="libs" framework="true"/>
+        <source-file src="src/android/mobilepay-appswitch-2.2.0.jar" target-dir="libs" framework="true"/>
     </platform>
 
     <!-- ios -->

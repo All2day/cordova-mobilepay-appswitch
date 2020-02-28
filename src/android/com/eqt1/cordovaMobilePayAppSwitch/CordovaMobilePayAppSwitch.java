@@ -16,13 +16,23 @@ import android.util.Log;
 
 import java.math.BigDecimal;
 
-import dk.danskebank.mobilepay.sdk.CaptureType;
+/*import dk.danskebank.mobilepay.sdk.CaptureType;
 import dk.danskebank.mobilepay.sdk.Country;
 import dk.danskebank.mobilepay.sdk.MobilePay;
 import dk.danskebank.mobilepay.sdk.ResultCallback;
 import dk.danskebank.mobilepay.sdk.model.FailureResult;
 import dk.danskebank.mobilepay.sdk.model.Payment;
 import dk.danskebank.mobilepay.sdk.model.SuccessResult;
+*/
+
+import dk.mobilepay.sdk.CaptureType;
+import dk.mobilepay.sdk.Country;
+import dk.mobilepay.sdk.MobilePay;
+import dk.mobilepay.sdk.ResultCallback;
+import dk.mobilepay.sdk.model.FailureResult;
+import dk.mobilepay.sdk.model.Payment;
+import dk.mobilepay.sdk.model.SuccessResult;
+
 
 public class CordovaMobilePayAppSwitch extends CordovaPlugin {
   private static final String TAG = "CordovaMobilePayAppSwitch";
@@ -37,7 +47,14 @@ public class CordovaMobilePayAppSwitch extends CordovaPlugin {
     int merchantResId = cordova.getActivity().getResources().getIdentifier("merchantId", "string", cordova.getActivity().getPackageName());
     String merchantId = cordova.getActivity().getString(merchantResId);
 
+    // Initialize the AppSwitch SDK with your own Merchant ID. A country can also be provided to target specific MobilePay apps (default is DK). It is important that init() is called before everything else since it resets all settings.
     MobilePay.getInstance().init(merchantId, Country.DENMARK);
+
+    // Determines which type of payment you would like to start. RESERVE and PARTIAL CAPTURE are the possibilities. RESERVE is default. See the GitHub wiki for more information on each type.
+    MobilePay.getInstance().setCaptureType(CaptureType.RESERVE);
+    // Set the number of seconds the user has to complete the payment. Default is 0, which is no timeout.
+    MobilePay.getInstance().setTimeoutSeconds(0);
+
 
     Log.d(TAG, "Initializing CordovaMobilePayAppSwitch");
   }
@@ -50,41 +67,42 @@ public class CordovaMobilePayAppSwitch extends CordovaPlugin {
 
       this.callbackContext = callbackContext;
 
-        // Check if the MobilePay app is installed on the device.
-        boolean isMobilePayInstalled = MobilePay.getInstance().isMobilePayInstalled(cordova.getActivity().getApplicationContext());
-        
-        if (isMobilePayInstalled) {
-          // MobilePay is present on the system. Create a Payment object.
-          Payment payment = new Payment();
-          payment.setProductPrice(new BigDecimal(amount));
-          payment.setOrderId(orderId);
+      // Check if the MobilePay app is installed on the device.
+      boolean isMobilePayInstalled = MobilePay.getInstance().isMobilePayInstalled(cordova.getActivity().getApplicationContext());
 
-          payment.setServerCallbackUrl(callbackUrl);
+      if (isMobilePayInstalled) {
+        // MobilePay is present on the system. Create a Payment object.
+        Payment payment = new Payment();
+        payment.setProductPrice(new BigDecimal(amount));
+        payment.setOrderId(orderId);
 
-          Log.d(TAG, "setting callback url to :"+callbackUrl);
-          // Create a payment Intent using the Payment object from above.
-          Intent paymentIntent = MobilePay.getInstance().createPaymentIntent(payment);
+        payment.setServerCallbackUrl(callbackUrl);
 
-          // We now jump to MobilePay to complete the transaction. Start MobilePay and wait for the result using an unique result code of your choice.
-          cordova.setActivityResultCallback(this);
-          cordova.getActivity().startActivityForResult(paymentIntent, MOBILEPAY_PAYMENT_REQUEST_CODE);
-          } else {
-              // MobilePay is not installed. Use the SDK to create an Intent to take the user to Google Play and download MobilePay.
-              Intent intent = MobilePay.getInstance().createDownloadMobilePayIntent(cordova.getActivity().getApplicationContext());
-              cordova.getActivity().startActivity(intent);
-          }
-          //Send a plugin result with NO_RESULT and set KeepCallback as true
-          PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
-          r.setKeepCallback(true);
-          callbackContext.sendPluginResult(r);
+        Log.d(TAG, "setting callback url to :"+callbackUrl);
+        // Create a payment Intent using the Payment object from above.
+        Intent paymentIntent = MobilePay.getInstance().createPaymentIntent(payment);
 
-      } else if(action.equals("getDate")) {
-        // An example of returning data back to the web layer
-        final PluginResult result = new PluginResult(PluginResult.Status.OK, ("Not Implemented"));
-        callbackContext.sendPluginResult(result);
+        // We now jump to MobilePay to complete the transaction. Start MobilePay and wait for the result using an unique result code of your choice.
+        cordova.setActivityResultCallback(this);
+        cordova.getActivity().startActivityForResult(paymentIntent, MOBILEPAY_PAYMENT_REQUEST_CODE);
+      } else {
+        // MobilePay is not installed. Use the SDK to create an Intent to take the user to Google Play and download MobilePay.
+        Intent intent = MobilePay.getInstance().createDownloadMobilePayIntent(cordova.getActivity().getApplicationContext());
+        cordova.getActivity().startActivity(intent);
       }
+      //Send a plugin result with NO_RESULT and set KeepCallback as true
+      PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
+      r.setKeepCallback(true);
+      callbackContext.sendPluginResult(r);
+
+    } else if(action.equals("getDate")) {
+      // An example of returning data back to the web layer
+      final PluginResult result = new PluginResult(PluginResult.Status.OK, ("Not Implemented"));
+      callbackContext.sendPluginResult(result);
+    }
     return true;
   }
+
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     final CordovaMobilePayAppSwitch that = this;
