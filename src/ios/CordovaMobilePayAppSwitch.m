@@ -56,14 +56,16 @@ NSString *myCallbackId;
     }
 
     NSLog(@"startPayment, urlScheme: '%@', merchantId: '%@''", urlScheme, merchantId);
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURL:) name:urlScheme object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURL:) name:urlScheme object:nil];
     //NSLog(@"After addObserver: country:'%i'",MobilePayCountry_Denmark);
-  [[MobilePayManager sharedInstance] setupWithMerchantId:merchantId merchantUrlScheme:urlScheme country:MobilePayCountry_Denmark];
+    [[MobilePayManager sharedInstance] setupWithMerchantId:merchantId merchantUrlScheme:urlScheme country:MobilePayCountry_Denmark];
     //NSLog(@"After setupWithMerchantId");
     //NSLog(@"command:'%@'",command);
     //setting callback url
-  [[MobilePayManager sharedInstance] setServerCallbackUrl:callbackUrl];
+    [[MobilePayManager sharedInstance] setServerCallbackUrl:callbackUrl];
 
+    //Setting the capture type
+    [MobilePayManager sharedInstance].captureType = MobilePayCaptureType_Reserve ;
     myCallbackId = command.callbackId;
 
     NSString* amountStr = [command.arguments objectAtIndex:0];
