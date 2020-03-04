@@ -62,7 +62,7 @@ NSString *myCallbackId;
     //NSLog(@"After setupWithMerchantId");
     //NSLog(@"command:'%@'",command);
     //setting callback url
-    [[MobilePayManager sharedInstance] setServerCallbackUrl:callbackUrl];
+    //[[MobilePayManager sharedInstance] setServerCallbackUrl:callbackUrl];
 
     //Setting the capture type
     [MobilePayManager sharedInstance].captureType = MobilePayCaptureType_Reserve ;
@@ -86,8 +86,8 @@ NSString *myCallbackId;
       return;
     }
 
-
-    float fAmount = [amountStr floatValue];
+    NSDecimalNumber *fAmount = [NSDecimalNumber decimalNumberWithString:amountStr];
+    //float fAmount = [amountStr floatValue];
 
     MobilePayPayment *payment = nil;
     @try{
@@ -106,7 +106,7 @@ NSString *myCallbackId;
         if (payment && orderId /*&& ([orderId length] > 0)*/ && (fAmount >= 0)) {
             @try{
 
-              [[MobilePayManager sharedInstance]beginMobilePaymentWithPayment:payment error:^(NSError * _Nonnull error) {
+              [[MobilePayManager sharedInstance]beginMobilePaymentWithPayment:payment error:^(MobilePayErrorPayment * _Nonnull error) {
                   NSLog(@"error in payment");
 
                   NSDictionary *jsonResultDict = nil;
@@ -170,12 +170,12 @@ NSString *myCallbackId;
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:jsonResultDict];
         [self.commandDelegate sendPluginResult:result callbackId:myCallbackId];
 
-    } error:^(NSError * _Nonnull error) {
-        NSDictionary *dict = error.userInfo;
+    } error:^(MobilePayErrorPayment * _Nonnull mp_error) {
+        NSDictionary *dict = mp_error.error.userInfo;
         NSString *errorMessage = [dict valueForKey:NSLocalizedFailureReasonErrorKey];
 
         NSDictionary *jsonResultDict = [NSDictionary dictionaryWithObjectsAndKeys:
-        [NSNumber numberWithInteger:error.code], @"errorCode",
+        [NSNumber numberWithInteger:mp_error.error.code], @"errorCode",
         errorMessage, @"errorMessage",
         nil];
 
