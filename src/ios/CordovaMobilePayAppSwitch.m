@@ -55,7 +55,7 @@ NSString *myCallbackId;
       return;
     }
 
-    NSLog(@"startPayment, urlScheme: '%@', merchantId: '%@''", urlScheme, merchantId);
+    NSLog(@"startPayment, urlScheme: '%@', merchantId: '%@'", urlScheme, merchantId);
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURL:) name:urlScheme object:nil];
     //NSLog(@"After addObserver: country:'%i'",MobilePayCountry_Denmark);
     [[MobilePayManager sharedInstance] setupWithMerchantId:merchantId merchantUrlScheme:urlScheme country:MobilePayCountry_Denmark];
@@ -64,14 +64,15 @@ NSString *myCallbackId;
     //setting callback url
     //[[MobilePayManager sharedInstance] setServerCallbackUrl:callbackUrl];
 
+    NSLog(@"set capture type");
     //Setting the capture type
     [MobilePayManager sharedInstance].captureType = MobilePayCaptureType_Reserve ;
     myCallbackId = command.callbackId;
 
-    NSString* amountStr = [command.arguments objectAtIndex:0];
 
     //fetch the order id according to its type, as the json mechanism behind the scenes can choose NSNumer instead of NSString
     NSString* orderId = nil;
+    NSLog(@"getting orderId");
     if([[command.arguments objectAtIndex:1] isKindOfClass:[NSNumber class]]){
       orderId = [[command.arguments objectAtIndex:1] stringValue];
     }
@@ -86,11 +87,35 @@ NSString *myCallbackId;
       return;
     }
 
-    NSDecimalNumber *fAmount = [NSDecimalNumber decimalNumberWithString:amountStr];
+    //NSLog(@"getting amountStr");
+    //NSString* amountStr = [command.arguments objectAtIndex:0];
+
+
+    NSDecimalNumber *fAmount = nil;
+    if([[command.arguments objectAtIndex:0] isKindOfClass:[NSNumber class]]){
+      NSNumber *amountNr = [command.arguments objectAtIndex:0];
+      fAmount = [NSDecimalNumber decimalNumberWithDecimal:amountNr.decimalValue];
+    }
+    else if([[command.arguments objectAtIndex:0] isKindOfClass:[NSString class]]){
+      NSString* amountStr = [command.arguments objectAtIndex:0];
+      fAmount = [NSDecimalNumber decimalNumberWithString:amountStr];
+    } else {
+      jsonResultDict = [NSDictionary dictionaryWithObjectsAndKeys:
+      @"amount not string or number", @"errorMessage",
+      nil];
+      result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:jsonResultDict];
+      [self.commandDelegate sendPluginResult:result callbackId:myCallbackId];
+      return;
+    }
+    
+    NSLog(@"got amount");
+    NSLog(@"orderId: '%@' amount: '%@'", orderId, fAmount);
+
     //float fAmount = [amountStr floatValue];
 
     MobilePayPayment *payment = nil;
     @try{
+      NSLog(@"create payment");
       payment = [[MobilePayPayment alloc]initWithOrderId:orderId productPrice:fAmount];
     }
     @catch (NSException *exception){
@@ -105,7 +130,7 @@ NSString *myCallbackId;
         //No need to start a payment if one or more parameters are missing
         if (payment && orderId /*&& ([orderId length] > 0)*/ && (fAmount >= 0)) {
             @try{
-
+              NSLog(@"begin with payment");
               [[MobilePayManager sharedInstance]beginMobilePaymentWithPayment:payment error:^(MobilePayErrorPayment * _Nonnull error) {
                   NSLog(@"error in payment");
 

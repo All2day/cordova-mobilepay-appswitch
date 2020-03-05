@@ -73,12 +73,13 @@ public class CordovaMobilePayAppSwitch extends CordovaPlugin {
       if (isMobilePayInstalled) {
         // MobilePay is present on the system. Create a Payment object.
         Payment payment = new Payment();
+        Log.d(TAG, "payment, orderId:"+orderId+" productPrice:"+amount);
         payment.setProductPrice(new BigDecimal(amount));
         payment.setOrderId(orderId);
 
-        payment.setServerCallbackUrl(callbackUrl);
+        //payment.setServerCallbackUrl(callbackUrl);
 
-        Log.d(TAG, "setting callback url to :"+callbackUrl);
+        //Log.d(TAG, "setting callback url to :"+callbackUrl);
         // Create a payment Intent using the Payment object from above.
         Intent paymentIntent = MobilePay.getInstance().createPaymentIntent(payment);
 
@@ -145,8 +146,8 @@ public class CordovaMobilePayAppSwitch extends CordovaPlugin {
           // The payment failed - show an appropriate error message to the user. Consult the MobilePay class documentation for possible error codes.
         }
         @Override
-        public void onCancel() {
-          Log.d(TAG, "Cancelled");
+        public void onCancel(String orderId) {
+          Log.d(TAG, "Cancelled:"+orderId);
 
           JSONObject jResult = new JSONObject();
           try {
